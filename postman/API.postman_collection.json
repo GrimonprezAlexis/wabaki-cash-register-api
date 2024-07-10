@@ -1,0 +1,81 @@
+{
+	"info": {
+		"_postman_id": "ba04c6c9-6d4c-45c2-848c-dda9186185c3",
+		"name": "Commandes API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "28223928"
+	},
+	"item": [
+		{
+			"name": "Nouvelle commande",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"idCommande\": \"test\",\n    \"isoDateCommande\": \"2023-09-04T14:30:00Z\",\n    \"idClient\": \"12345\",\n    \"tableNumber\": 5,\n    \"paymentMean\": \"CB\",\n    \"productsIds\": [\n        1,\n        2\n    ],\n    \"orderType\": {\n        \"type\": \"SURPLACE\",\n        \"location\": \"INSIDE\"\n    },\n    \"etat\": \"PENDING\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/v1/commande",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"v1",
+						"commande"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:3000/v1/health/check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/v1/health/check",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"v1",
+						"health",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:3000/v1/commande/64f60e6bafe9b0b2824bd8c2",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/v1/commande/64f60e6bafe9b0b2824bd8c2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"v1",
+						"commande",
+						"64f60e6bafe9b0b2824bd8c2"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
