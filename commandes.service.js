@@ -48,7 +48,7 @@ module.exports.CommandesService = class CommandesService {
             if (!commande) {
                 CommonService.handleNotFoundError(res, `No commande found with id ${commandeId}`);
             } else {
-                CommonService.sendSuccessResponse(res, commande);
+                CommonService.sendSuccessResponse(res, commande[0]);
             }
         } catch (err) {
             CommonService.handleError(res, err, 'Error fetching commande by ID');
@@ -60,6 +60,7 @@ module.exports.CommandesService = class CommandesService {
             'idCommande',
             'isoDateCommande',
             'tableNumber',
+            'products',
             'productsIds',
             'orderType',
             'etat',
@@ -79,7 +80,7 @@ module.exports.CommandesService = class CommandesService {
         } catch (error) {
             CommonService.handleError(res, error, 'Error creating project');
         }
-    }
+    }     
 
     async printCommande(body, res){
         CommonService.checkRequiredProperties(body, [

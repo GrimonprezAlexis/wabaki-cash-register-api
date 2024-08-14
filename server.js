@@ -14,12 +14,6 @@ app.use(cors({
     credentials: true
 }));
 
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: err.message });
-});
-
-
 // Connect to MongoDB using mongoose
 const mongoose = require(`mongoose`);
 const config = require(`./config`);
