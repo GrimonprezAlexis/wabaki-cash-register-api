@@ -15,15 +15,20 @@ module.exports = (router) => {
     });
 
     router.get('/commande/:id', (req, res, next) => {
-      const projects = CommandesService.executeAndSendResult(async () => {
+      CommonService.executeAndSendResult(async () => {
         return await new CommandesService().getCommandeById(req, res);
       }, res, next);
-      res.json(projects);
     });
     
     router.post('/commande', (req, res, next) => {
       CommonService.executeAndSendResult(async () => {
         return await new CommandesService().createCommande(req.body, res);
+      }, res, next);
+    });
+
+    router.post('/commande/print-ticket', async (req, res) => {
+      CommonService.executeAndSendResult(async () => {
+        return await new CommandesService().printCommande(req, res);
       }, res, next);
     });
 

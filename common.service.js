@@ -2,13 +2,17 @@ const _ = require('lodash');
 
 module.exports.executeAndSendResult = async function (func, res, next) {
   try {
-      const result = await func(); // You can keep this await here since func is now an async function
-      return result;
+    const result = await func(); // Execute the function
+    return res.json(result); // Send the result as a JSON response
   } catch (e) {
-      next(e);
+    if (!res.headersSent) { // Check if the headers have not been sent yet
+      res.status(400).json({ error: e.message }); // Send the error response with a status code and message
+    } else {
+      console.error("Headers already sent, cannot send error response.");
+    }
   }
 };
- 
+
 // Handle MongoDB connection errors
 module.exports.handleDBError = (error) => {
     console.error('MongoDB connection error:', error);

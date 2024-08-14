@@ -5,7 +5,7 @@ const commandeSchema = new mongoose.Schema({
   idCommande: String,
   isoDateCommande: String,
   tableNumber: Number,
-  productsIds: [Number],
+  productsIds: [{ id: Number, quantity: Number}],
   orderType: {
     type: {
       type: String,
@@ -15,11 +15,12 @@ const commandeSchema = new mongoose.Schema({
       type: String,
       required: false
     },
-    etat: {
-      type: String,
-      enum: ['PENDING', 'VALIDER'],
-    },
-  }
+  },
+  etat: {
+    type: String,
+    enum: ['PENDING', 'VALIDER'],
+  },
+  totalPrice: Number
   // idClient: String,
   // paymentMean: {
 	// type: String,
