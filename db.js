@@ -5,16 +5,21 @@ const config = require(`./config`);
 let isConnected;
 
 const connectDB = async () => {
-    if(isConnected){
+    if(mongoose.connection.readyState === 1){
         console.log('>> using existing database connection');
-        return Promise.resolve();
+        return;
     }
+
     console.log('>> using new database connection');
-    await mongoose.connect(`${config.mongoURI}`, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    });
-    isConnected = mongoose.connection.readyState;
+    try {
+        await mongoose.connect(`${config.mongoURI}`, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        }); 
+    } catch(err){
+        console.log('Error connecting to database', err);
+        throw err;
+    }
 };
 
 mongoose.connection.on('connected', () => {

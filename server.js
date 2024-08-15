@@ -25,6 +25,7 @@ connectDB().then(() => {
     app.listen(port, () => console.log(`Server is running on port ${port}`));
 }).catch(err => {
     console.log(`Failed to connect to MongoDB`, err);
+    process.exit(1);
 })
 
 module.exports = app;
