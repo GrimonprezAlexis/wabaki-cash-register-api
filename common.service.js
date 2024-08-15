@@ -3,13 +3,9 @@ const _ = require('lodash');
 module.exports.executeAndSendResult = async function (func, res, next) {
   try {
     const result = await func(); // Execute the function
-    return res.json(result); // Send the result as a JSON response
+    return result; // Send the result as a JSON response
   } catch (e) {
-    if (!res.headersSent) { // Check if the headers have not been sent yet
-      res.status(400).json({ error: e.message }); // Send the error response with a status code and message
-    } else {
-      console.error("Headers already sent, cannot send error response.");
-    }
+    next(e);
   }
 };
 
