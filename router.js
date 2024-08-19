@@ -2,6 +2,7 @@
 const _ = require('lodash');
 const CommonService = require('./common.service');
 const { CommandesService } = require('./commandes.service');
+const { PrinterService } = require('./printer.service');
 
 module.exports = (router) => {
     router.get('/health/check', (req, res, next) => {
@@ -28,7 +29,13 @@ module.exports = (router) => {
 
     router.post('/commande/print-ticket', async (req, res) => {
       CommonService.executeAndSendResult(async () => {
-        return await new CommandesService().printCommande(req, res);
+        return await new PrinterService().printCommande(req.body, res);
+      }, res, next);
+    });
+
+    router.post('/print', (req, res, next) => {
+      CommonService.executeAndSendResult(async () => {
+        return await new PrinterService().test(req.body, res);
       }, res, next);
     });
 
