@@ -24,6 +24,10 @@ const productSchema = new mongoose.Schema({
   photo: {
     type: String,
     required: false
+  },
+  quantity: {
+    type: Number,
+    required: true
   }
 });
 
@@ -36,7 +40,6 @@ const commandeSchema = new mongoose.Schema({
     type: [productSchema],
     required: true
   },
-  productsIds: [{ id: Number, quantity: Number}],
   orderType: {
     type: {
       type: String,
@@ -49,7 +52,11 @@ const commandeSchema = new mongoose.Schema({
   },
   etat: {
     type: String,
-    enum: ['PENDING', 'VALIDER'],
+    enum: ['CONFIRMED', 'SERVED'],
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['PENDING', 'PAID'],
   },
   totalPrice: Number
   // idClient: String,

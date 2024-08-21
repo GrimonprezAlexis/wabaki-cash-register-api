@@ -34,9 +34,9 @@ module.exports.CommandesService = class CommandesService {
             'isoDateCommande',
             'tableNumber',
             'products',
-            'productsIds',
             'orderType',
             'etat',
+            'paymentStatus',
             'totalPrice'
             // idClient?: string;
             // paymentMean?: "CASH" | "CB";
