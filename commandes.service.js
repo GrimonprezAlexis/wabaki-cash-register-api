@@ -49,9 +49,46 @@ module.exports.CommandesService = class CommandesService {
                 ...body
             });
             const savedCommande = await newCommande.save();
-            CommonService.sendSuccessResponse(res, {id: savedCommande._id});
+            CommonService.sendSuccessResponse(res, {id: savedCommande.idCommande});
         } catch (error) {
             CommonService.handleError(res, error, 'Error creating project');
         }
     }
+
+
+    async extendCommande(req, res) {
+        const { params, body } = req;
+
+        CommonService.checkRequiredProperties(params, ['idCommande']);
+        CommonService.checkRequiredProperties(body, [
+            'extendProducts'
+        ]);
+    
+        try {
+            const existingCommande = await Commande.findOne({ idCommande: params.idCommande });
+            if (!existingCommande) {
+                return CommonService.sendErrorResponse(res, "Commande not found", 404);
+            }
+            existingCommande.products = body.extendProducts.map(product => ({
+                _id: new mongoose.Types.ObjectId(),
+                ...product
+            }));;
+    
+            // Step 3: Optionally, recalculate the total price based on new products added
+            const newTotalPrice = existingCommande.products.reduce((total, product) => {
+                return total + (product.price * product.quantity);
+            }, 0);
+
+            // Update the total price in the commande
+            existingCommande.totalPrice = newTotalPrice;    
+            const updatedCommande = await existingCommande.save();
+    
+            // Step 5: Send success response with updated commande details
+            CommonService.sendSuccessResponse(res, { id: updatedCommande.idCommande});
+        } catch (error) {
+            CommonService.handleError(res, error, 'Error extending commande');
+        }
+    }
+    
+
 };
