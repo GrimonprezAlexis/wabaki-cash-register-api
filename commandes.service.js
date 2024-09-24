@@ -1,6 +1,6 @@
 'use strict';
 const mongoose = require('mongoose');
-const Commande = require('./commandes');
+const Commande = require('./models/commande');
 const CommonService = require('./common.service');
 const { _ } = require('lodash');
 module.exports.CommandesService = class CommandesService {

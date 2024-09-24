@@ -66,5 +66,5 @@ const commandeSchema = new mongoose.Schema({
   // },
 });
 
-const Commande = mongoose.model('Commandes', commandeSchema);
+const Commande = mongoose.model('Commande', commandeSchema);
 module.exports = Commande;

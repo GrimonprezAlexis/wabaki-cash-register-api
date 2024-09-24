@@ -1,0 +1,93 @@
+{
+	"info": {
+		"_postman_id": "72461c32-2a83-4bbd-86bc-f10804ac1918",
+		"name": "Categories API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "28223928"
+	},
+	"item": [
+		{
+			"name": "http://localhost:5000/v1/categories",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/v1/categories",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"v1",
+						"categories"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "http://localhost:5000/v1/categories",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5000/v1/categories",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"v1",
+								"categories"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "*"
+						},
+						{
+							"key": "Access-Control-Allow-Credentials",
+							"value": "true"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "299"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"12b-a6EN+O2wujLmpixrY2cBr+FnzYU\""
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 24 Sep 2024 14:50:39 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Success\",\n    \"data\": {\n        \"message\": \"Categories fetched successfully\",\n        \"categories\": [\n            \"ACCOMPAGNEMENT\",\n            \"BENTO\",\n            \"BOISSON\",\n            \"BOX\",\n            \"BROCHETTE\",\n            \"CALIFORNIA\",\n            \"CHIRASHI\",\n            \"CROUSTY\",\n            \"DESSERT\",\n            \"GYOZA\",\n            \"MAKI\",\n            \"PLATEAU\",\n            \"POKEBOWL\",\n            \"ROLL\",\n            \"SANDWICH\",\n            \"SASHIMI\",\n            \"SNOW ROLL\",\n            \"SPRING ROLL\",\n            \"SUSHI\"\n        ]\n    }\n}"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,173 @@
+{
+	"info": {
+		"_postman_id": "ba04c6c9-6d4c-45c2-848c-dda9186185c3",
+		"name": "Commandes API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "28223928"
+	},
+	"item": [
+		{
+			"name": "Nouvelle commande",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"idCommande\": \"test\",\n    \"isoDateCommande\": \"2023-09-04T14:30:00Z\",\n    \"idClient\": \"12345\",\n    \"tableNumber\": 5,\n    \"paymentMean\": \"CB\",\n    \"productsIds\": [\n        1,\n        2\n    ],\n    \"orderType\": {\n        \"type\": \"SURPLACE\",\n        \"location\": \"INSIDE\"\n    },\n    \"etat\": \"PENDING\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/v1/commande",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"v1",
+						"commande"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Nouvelle commande Copy",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"idCommande\": \"test\",\n    \"isoDateCommande\": \"2023-09-04T14:30:00Z\",\n    \"idClient\": \"12345\",\n    \"tableNumber\": 5,\n    \"paymentMean\": \"CB\",\n    \"productsIds\": [\n        1,\n        2\n    ],\n    \"orderType\": {\n        \"type\": \"SURPLACE\",\n        \"location\": \"INSIDE\"\n    },\n    \"etat\": \"PENDING\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/v1/print",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"v1",
+						"print"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:3000/v1/health/check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/v1/health/check",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"v1",
+						"health",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:3000/v1/commande/64f60e6bafe9b0b2824bd8c2",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/v1/commande/64f60e6bafe9b0b2824bd8c2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"v1",
+						"commande",
+						"64f60e6bafe9b0b2824bd8c2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:5000/v1/commande/1720645870639-1084",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/v1/commande/1720645870639-1084",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"v1",
+						"commande",
+						"1720645870639-1084"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://192.168.1.192/cgi-bin/epos/service.cgi?devid=local_printer&timeout=10000",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<epos-print xmlns=\"http://www.epson-pos.com/schemas/2011/03/epos-print\">\n    <text align=\"center\">*** TEST PRINT ***</text>\n    <text align=\"center\">-------------------------</text>\n    <text align=\"center\">Epson TM-T20II Test Page</text>\n    <text align=\"center\">-------------------------</text>\n    <cut />\n</epos-print>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.1.192/cgi-bin/epos/service.cgi?devid=local_printer&timeout=10000",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"192"
+					],
+					"path": [
+						"cgi-bin",
+						"epos",
+						"service.cgi"
+					],
+					"query": [
+						{
+							"key": "devid",
+							"value": "local_printer"
+						},
+						{
+							"key": "timeout",
+							"value": "10000"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

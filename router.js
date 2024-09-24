@@ -8,6 +8,7 @@ const { CommandesService } = require('./commandes.service');
 const { CatalogueService } = require('./catalogues.service');
 
 const { PrinterService } = require('./printer.service');
+const { CategoriessService } = require('./categories.service');
 
 // Configure Multer to use the /tmp directory for uploads in serverless environments
 const storage = multer.diskStorage({
@@ -39,6 +40,25 @@ module.exports = (router) => {
         return await new CatalogueService().downloadExampleXls(res);
       }, res, next);
     });
+
+    router.get('/catalogue/grouped-category', (req, res, next) => {
+      CommonService.executeAndSendResult(async () => {
+        return await new CatalogueService().getCatalogueGroupedByCategory(res);
+      }, res, next);
+    });
+
+    router.get('/catalogue', (req, res, next) => {
+      CommonService.executeAndSendResult(async () => {
+        return await new CatalogueService().getCatalogueWithIcons(res);
+      }, res, next);
+    });
+
+    router.get('/categories', (req, res, next) => {
+      CommonService.executeAndSendResult(async () => {
+        return await new CategoriessService().getCategories(res);
+      }, res, next);
+    });
+
 
     router.get('/commandes', (req, res, next) => {
       CommonService.executeAndSendResult(async () => {
