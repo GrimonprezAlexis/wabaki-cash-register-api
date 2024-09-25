@@ -31,6 +31,22 @@ const productSchema = new mongoose.Schema({
   }
 });
 
+
+const productPaySchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true
+  },
+  price: {
+    type: Number,
+    required: true
+  },
+  quantity: {
+    type: Number,
+    required: true
+  }
+});
+
 const commandeSchema = new mongoose.Schema({
   _id: mongoose.Schema.Types.ObjectId,
   idCommande: String,
@@ -58,12 +74,18 @@ const commandeSchema = new mongoose.Schema({
     type: String,
     enum: ['PENDING', 'PAID'],
   },
-  totalPrice: Number
-  // idClient: String,
-  // paymentMean: {
-	// type: String,
-	// enum: ['CB', 'CASH']
-  // },
+  totalPrice: Number,
+  paidProducts: {
+    type: [productPaySchema],
+    required: false,
+  },
+  paymentMethod: {
+	  type: String,
+	  enum: ['CB', 'CASH'],
+    required: false,
+  },
+  totalPricePaid: Number,
+    // idClient: String,
 });
 
 const Commande = mongoose.model('Commande', commandeSchema);

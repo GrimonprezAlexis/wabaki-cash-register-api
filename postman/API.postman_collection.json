@@ -13,7 +13,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"idCommande\": \"test\",\n    \"isoDateCommande\": \"2023-09-04T14:30:00Z\",\n    \"idClient\": \"12345\",\n    \"tableNumber\": 5,\n    \"paymentMean\": \"CB\",\n    \"productsIds\": [\n        1,\n        2\n    ],\n    \"orderType\": {\n        \"type\": \"SURPLACE\",\n        \"location\": \"INSIDE\"\n    },\n    \"etat\": \"PENDING\"\n}",
+					"raw": "{\n    \"idCommande\": \"test\",\n    \"isoDateCommande\": \"2023-09-04T14:30:00Z\",\n    \"idClient\": \"12345\",\n    \"tableNumber\": 5,\n    \"PaymentMethod\": \"CB\",\n    \"productsIds\": [\n        1,\n        2\n    ],\n    \"orderType\": {\n        \"type\": \"SURPLACE\",\n        \"location\": \"INSIDE\"\n    },\n    \"etat\": \"PENDING\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"

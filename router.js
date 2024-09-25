@@ -60,6 +60,9 @@ module.exports = (router) => {
     });
 
 
+    //================
+    // COMMANDE ROUTER
+    //================
     router.get('/commandes', (req, res, next) => {
       CommonService.executeAndSendResult(async () => {
         return await new CommandesService().getCommandes(req, res);
@@ -78,7 +81,13 @@ module.exports = (router) => {
       }, res, next);
     });
 
-    router.post('/commande/:idCommande/extend', (req, res, next) => {
+    router.post('/commande/:id/pay', (req, res, next) => {
+      CommonService.executeAndSendResult(async () => {
+        return await new CommandesService().payCommande(req, res);
+      }, res, next);
+    });
+
+    router.post('/commande/:id/extend', (req, res, next) => {
       CommonService.executeAndSendResult(async () => {
       return await new CommandesService().extendCommande(req, res);
       }, res, next);
