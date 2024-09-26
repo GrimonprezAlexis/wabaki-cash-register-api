@@ -44,7 +44,12 @@ const productPaySchema = new mongoose.Schema({
   quantity: {
     type: Number,
     required: true
-  }
+  },
+  paymentMethod: {
+	  type: String,
+	  enum: ['CB', 'CASH'],
+    required: false,
+  },
 });
 
 const commandeSchema = new mongoose.Schema({
@@ -72,7 +77,7 @@ const commandeSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ['PENDING', 'PAID'],
+    enum: ['PENDING', 'PAID', 'PARTIALLY_PAID'],
   },
   totalPrice: Number,
   paidProducts: {

@@ -117,6 +117,7 @@ module.exports.CatalogueService = class CatalogueService {
                     name: product.name,
                     price: product.price,
                     photo: product.photo,
+                    icon: this.getIconForCategory(product.category.name)
                 });
 
                 return acc;

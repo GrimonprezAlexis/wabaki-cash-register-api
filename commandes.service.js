@@ -54,7 +54,7 @@ module.exports.CommandesService = class CommandesService {
         } catch (error) {
             CommonService.handleError(res, error, 'Error creating project');
         }
-    }
+    };
 
 
     async extendCommande(req, res) {
@@ -89,7 +89,7 @@ module.exports.CommandesService = class CommandesService {
         } catch (error) {
             CommonService.handleError(res, error, 'Error extending commande');
         }
-    }
+    };
 
     async payCommande(req, res) {
         const { params, body } = req;
@@ -100,10 +100,10 @@ module.exports.CommandesService = class CommandesService {
             'totalPrice'
         ]);
 
-        // Step 1: Check if the commande exists
         const { products, paymentMethod, totalPrice } = req.body;
-      
+        
         try {
+            // Step 1: Check if the commande exists
             const existingCommande = await Commande.findOne({ idCommande: params.id }).exec();
             if (!existingCommande || existingCommande == null) {
                 return CommonService.handleNotFoundError(res, `Commande ${params.idCommande} not found`);
@@ -117,34 +117,32 @@ module.exports.CommandesService = class CommandesService {
                 return CommonService.handleError(res,  `The product with id ${alreadyPaidProduct.id} has already been paid.`,);
             }
 
-            // Step 3: Check if the product exist inside Command products rather than products passed in body
-            const nonExistingProducts = products.filter(x => existingCommande.products.some(y => x.id !== y.id));
-            if (nonExistingProducts?.length > 0) {
-                return CommonService.handleError(res, `The product with id ${nonExistingProducts[0].id} does not exist.`);
-            }
-
-            // Step 4: Check if the payment method is valid
+            // Step 3: Check if the payment method is valid
             if (paymentMethod !== 'CASH' && paymentMethod !== 'CB') {
                 return CommonService.handleError(res, `The payment method ${paymentMethod} is not valid.`,);
             }
                 
             // Filtrer les produits payés
-            const paidProducts = products.map(product => ({
+            const newPaidProducts = products.map(product => ({
                 id: product.id,
                 price: product.price,
-                quantity: product.quantity
+                quantity: product.quantity,
+                paymentMethod: paymentMethod
             }));
-        
-            // Mettre à jour la commande avec les informations de paiement
-            if(existingCommande.totalPrice === existingCommande.totalPricePaid && existingCommande.paymentStatus === 'PAID'){
-                return CommonService.handleError(res, `The commande with id ${params.id} has already been paid.`,);
-            }
-            if(existingCommande.totalPrice === existingCommande.totalPricePaid && existingCommande.paymentStatus !== 'PAID'){
+
+            existingCommande.paidProducts = [...existingCommande.paidProducts, ...newPaidProducts];
+            existingCommande.totalPricePaid = (existingCommande.totalPricePaid || 0) + totalPrice;
+
+            // Step 5: Update payment status if the total price is fully paid
+            if (existingCommande.paidProducts.length === existingCommande.products.length) {
                 existingCommande.paymentStatus = 'PAID';
             } else {
-                existingCommande.paidProducts = paidProducts;
-                existingCommande.paymentMethod = paymentMethod;
-                existingCommande.totalPricePaid = totalPrice;
+                existingCommande.paymentStatus = 'PARTIALLY_PAID';
+            }
+
+            // Mettre à jour la commande avec les informations de paiement
+            if((existingCommande.totalPrice === existingCommande.totalPricePaid) || existingCommande.paymentStatus === 'PAID'){
+                return CommonService.handleError(res, `The commande with id ${params.id} has already been paid.`,);
             }
 
             // Mettre à jour la commande dans la base de données en utilisant PayCommande
@@ -161,6 +159,6 @@ module.exports.CommandesService = class CommandesService {
             console.error('Payment error:', error);
             return CommonService.handleError(res, error, 'Erreur lors du paiement');
             }
-      };
+    };
 
 };
