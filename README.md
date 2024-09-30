@@ -12,7 +12,7 @@ config.js
 logger.js
 > postman
 
-
+`
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -63,7 +63,7 @@ db.once('open', () => {
     // Start the server after connecting to DB
     app.listen(port, () => console.log(`Server is running on port ${port}`));
 });
-# wabaki-api-nodejs
-# wabaki-cash-register-api
-# wabaki-cash-register-api
-# wabaki-cash-register-api
+`
+
+# Deplow on vercel
+`vercel`

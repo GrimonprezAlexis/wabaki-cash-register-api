@@ -11,7 +11,7 @@
     },
     {
       "src": "/v1/(.*)",
-      "dest": "/server.js"
+      "dest": "/router.js"
     }
   ]
 }
