@@ -1,6 +1,7 @@
-const fs = require('fs');
+const fs = require('fs'); 
 const path = require('path');
 const xlsx = require('xlsx'); // Import the xlsx library
+const admin = require('firebase-admin');
 const CommonService = require('./common.service');
 const Catalogue = require('./models/catalogue');
 const Category = require('./models/category');
@@ -16,15 +17,13 @@ module.exports.CatalogueService = class CatalogueService {
             const jsonData = xlsx.utils.sheet_to_json(worksheet);
 
             const uniqueCategories = new Set();
-            const catlogues = [];
+            const catalogues = [];
 
-            // Collect categories and catlogues from Excel file
+            // Collect categories and catalogues from Excel file
             jsonData.forEach(row => {
-                if (Object.values(row).every(value => !value)) return; // Skip empty rows
-
+                if (Object.values(row).every(value => !value)) return;
                 uniqueCategories.add(row['CATEGORIE']);
-
-                catlogues.push({
+                catalogues.push({
                     name: row['NOM'],
                     category: row['CATEGORIE'],
                     price: parseFloat(row['PRIX']),
@@ -32,42 +31,32 @@ module.exports.CatalogueService = class CatalogueService {
                 });
             });
 
-            // Insert categories and catlogues into MongoDB
-            const categoryMap = {};
-            const productPromises = [];
+            const db = admin.database();
+            const categoriesRef = db.ref('categories');
+            const cataloguesRef = db.ref('catalogues');
 
-            // Save unique categories to the database
-            for (const categoryName of uniqueCategories) {
-                let category = await Category.findOne({ name: categoryName });
+            // Save categories to Firebase Realtime Database
+            const categoryPromises = [];
+            uniqueCategories.forEach(category => {
+                categoryPromises.push(categoriesRef.push({ name: category }));
+            });
+            await Promise.all(categoryPromises);
 
-                if (!category) {
-                    category = new Category({ name: categoryName });
-                    await category.save();
-                }
-
-                categoryMap[categoryName] = category._id;
-            }
-
-            // Save catlogues to the database
-            for (const product of catlogues) {
-                const productData = {
+            // Save catalogues to Firebase Realtime Database
+            const cataloguePromises = catalogues.map(product => {
+                return cataloguesRef.push({
                     name: product.name,
-                    category: categoryMap[product.category], // Use the category ID
+                    category: product.category,
                     price: product.price,
                     photo: product.photo,
-                };
-
-                const newProduct = new Catalogue(productData);
-                productPromises.push(newProduct.save());
-            }
-
-            // Wait for all catlogues to be saved
-            await Promise.all(productPromises);
-
+                });
+            });
+            await Promise.all(cataloguePromises);
+            
             // Send success response
             CommonService.sendSuccessResponse(res, {
                 message: 'XLS successfully converted to JSON and saved to the database',
-                totalProducts: catlogues.length,
+                totalProducts: catalogues.length,
                 totalCategories: uniqueCategories.size,
             });
 
@@ -94,44 +83,106 @@ module.exports.CatalogueService = class CatalogueService {
         });
     }
 
-    async getCatalogueGroupedByCategory(res) {
+    async getCataloguesGroupedByCategory(res) {
         try {
-            // Find all catlogues and populate the category information
-            const catlogues = await Catalogue.find().populate('category').exec();
+            const db = admin.database();
+            const cataloguesRef = db.ref('catalogues');
+            const categoriesRef = db.ref('categories');
 
-            // Check if catlogues exist
-            if (!catlogues || catlogues.length === 0) {
+            // Step 1: Fetch all catalogues and categories from Firebase
+            const cataloguesSnapshot = await cataloguesRef.once('value');
+            const categoriesSnapshot = await categoriesRef.once('value');
+
+            const catalogues = cataloguesSnapshot.val();
+            const categories = categoriesSnapshot.val();
+
+            // Check if catalogues exist
+            if (!catalogues) {
                 return CommonService.sendSuccessResponse(res, {
-                    message: 'No catlogues found',
-                    catlogues: [],
+                    message: 'No catalogues found',
+                    catalogues: [],
                     totalCatalogues: 0,
                 });
             }
 
-            // Group catlogues by category
-            const groupedCatalogue = catlogues.reduce((acc, product) => {
-                const categoryName = product.category.name;
+            // Step 2: Group catalogues by category
+            const groupedCatalogue = Object.keys(catalogues).reduce((acc, key) => {
+                const product = catalogues[key];
+
                 if (!acc[categoryName]) acc[categoryName] = [];
                 acc[categoryName].push({
-                    id: product._id,
+                    id: key,
                     name: product.name,
                     price: product.price,
                     photo: product.photo,
-                    icon: this.getIconForCategory(product.category.name)
+                    icon: this.getIconForCategory(categoryName),                  
                 });
 
                 return acc;
             }, {});
 
+            // Step 3: Return the grouped catalogues
             return CommonService.sendSuccessResponse(res, {
                 message: 'Catalogue fetched successfully',
                 catalogue: groupedCatalogue,
-                totalCatalogues: catlogues.length,
+                totalCatalogues: Object.keys(catalogues).length,
             });
+
         } catch (error) {
             CommonService.handleError(res, error, 'Error fetching catalogue');
         }
     }
+    
+    async getCataloguesWithIcons(res) {
+        try {
+            const db = admin.database();
+            const cataloguesRef = db.ref('catalogues');
+            const categoriesRef = db.ref('categories');
+
+            // Fetch all catalogues from Firebase
+            const cataloguesSnapshot = await cataloguesRef.once('value');
+            const cataloguesData = cataloguesSnapshot.val();
+
+            // Fetch all categories from Firebase
+            const categoriesSnapshot = await categoriesRef.once('value');
+            const categoriesData = categoriesSnapshot.val();
+
+            // Check if there are any products
+            if (!cataloguesData) {
+                return CommonService.sendSuccessResponse(res, {
+                    message: 'No products found',
+                    products: [],
+                    totalProducts: 0,
+                });
+            }
+
+            // Map the catalogues to include the category name and icon
+            const productList = Object.keys(cataloguesData).map(key => {
+                const product = cataloguesData[key];
+
+                return {
+                    id: key,
+                    name: product.name,
+                    category: product.category,
+                    price: product.price,
+                    photo: product.photo,
+                    icon: this.getIconForCategory(product.category),
+                };
+            });
+
+            // Send success response with the product list
+            return CommonService.sendSuccessResponse(res, {
+                message: 'Catalogue with icons fetched successfully',
+                products: productList,
+                totalProducts: productList.length,
+            });
+
+        } catch (error) {
+            // Handle any errors during the process
+            CommonService.handleError(res, error, 'Error fetching catalogue with icons');
+        }
+    }
+
     getIconForCategory(categoryName) {
         const categoryIcons = {
             SUSHI: "🍣",
@@ -154,39 +205,7 @@ module.exports.CatalogueService = class CatalogueService {
             DESSERT: "🍰",
             BOISSON: "🥤",
         };
-    
         return categoryIcons[categoryName.toUpperCase()] || "";
     }
-    
-      async getCatalogueWithIcons(res) {
-        try {
-          const products = await Catalogue.find().populate('category').exec();    
-          if (!products || products.length === 0) {
-            return CommonService.sendSuccessResponse(res, {
-              message: 'No products found',
-              products: [],
-              totalProducts: 0,
-            });
-          }    
-          const productList = products.map(product => ({
-            id: product._id,
-            name: product.name,
-            category: product.category.name,
-            price: product.price,
-            photo: product.photo,
-            icon: this.getIconForCategory(product.category.name)
-          }));
-    
-          return CommonService.sendSuccessResponse(res, {
-            message: 'Catalogue with icons fetched successfully',
-            products: productList,
-            totalProducts: products.length,
-          });
-    
-        } catch (error) {
-          CommonService.handleError(res, error, 'Error fetching catalogue with icons');
-        }
-      }
-
 
 };

@@ -2,12 +2,21 @@
 require('dotenv').config();
 
 const express = require('express');
-const mongoose = require('mongoose');
+const admin = require('firebase-admin');
 const cors = require('cors');
 
 const app = express();
 const port = process.env.PORT || 3000;
-const mongoURI = process.env.MONGO_URI || 'your_default_mongo_uri';
+
+// Initialize Firebase Admin SDK
+const serviceAccount = require('./firebase-adminsdk.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: 'https://wabaki-cash-register-ionic-default-rtdb.firebaseio.com/'
+});
+
+const db = admin.database();
 
 app.use(require('./logger'));
 app.use(express.json());
@@ -19,41 +28,18 @@ app.use(cors({
     credentials: true
 }));
 
-// Connect to MongoDB using mongoose
-async function connectToMongo() {
-    try {
-        const connectionOptions = {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        };
-
-        await mongoose.connect(mongoURI, connectionOptions);
-        console.log('Connected to MongoDB');
-    } catch (error) {
-        console.error('MongoDB connection error:', error);
-        process.exit(1); // Exit the process on connection error
-    }
-}
-
-// Function to handle SIGINT signal
+// Graceful shutdown
 function handleSIGINT() {
-    mongoose.connection.close(() => {
-        console.log('MongoDB connection closed');
-        process.exit(0); // Exit the process after closing MongoDB connection
-    });
+    console.log('Firebase Realtime Database connection closed');
+    process.exit(0); 
 }
 
 // Use const for constants
 const router = express.Router({ mergeParams: true });
 const apiRouter = require('./router')(router);
 
-// Use async/await for better readability
 (async () => {
-    await connectToMongo();
-
-    // Handle SIGINT signal for graceful shutdown
     process.on('SIGINT', handleSIGINT);
-
     app.use('/v1', apiRouter);
 
     // Add generic error handling middleware

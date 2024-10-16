@@ -1,5 +1,6 @@
 'use strict';
 const mongoose = require('mongoose');
+const admin = require('firebase-admin');
 const Commande = require('./models/commande');
 const CommonService = require('./common.service');
 const { _ } = require('lodash');
@@ -8,26 +9,32 @@ module.exports.CommandesService = class CommandesService {
 
     async getCommandes(req, res) {
         try {
-            const result = await Commande.find().exec();
-            CommonService.sendSuccessResponse(res, result);
+            const db = admin.database();
+            const commandesRef = db.ref('commandes');
+            const snapshot = await commandesRef.once('value');
+            const commandes = snapshot.val();
+            if (!commandes) return CommonService.handleNotFoundError(res, 'No commandes found');
+            CommonService.sendSuccessResponse(res, commandes);
         } catch (error) {
             CommonService.handleError(res, error, 'Error fetching commandes');
         }
     }
-     
+
     async getCommandeById(req, res) {
         const commandeId = req.params.id;
         try {
-            const commande = await Commande.findOne({ idCommande: commandeId }).exec();
-            if (!commande) {
-                CommonService.handleNotFoundError(res, `No commande found with id ${commandeId}`);
-            } else {
-                CommonService.sendSuccessResponse(res, commande);
-            }
-        } catch (err) {
-            CommonService.handleError(res, err, 'Error fetching commande by ID');
+            const db = admin.database();
+            const commandesRef = db.ref('commandes');
+            const snapshot = await commandesRef.orderByChild('idCommande').equalTo(commandeId).once('value');
+            const commandeData = snapshot.val();
+            if (!commandeData) return CommonService.handleNotFoundError(res, `No commande found with id ${commandeId}`);
+            const commande = Object.values(commandeData)[0]; 
+            CommonService.sendSuccessResponse(res, commande);
+        } catch (error) {
+            CommonService.handleError(res, error, 'Error fetching commande by ID');
         }
     }
+
 
     async createCommande(body, res) {
         CommonService.checkRequiredProperties(body, [
@@ -45,47 +52,74 @@ module.exports.CommandesService = class CommandesService {
         ]);
 
         try {
-            const newCommande = new Commande({
-                _id: new mongoose.Types.ObjectId(),
-                ...body
-            });
-            const savedCommande = await newCommande.save();
-            CommonService.sendSuccessResponse(res, {id: savedCommande.idCommande});
+            const db = admin.database();
+            const commandesRef = db.ref('commandes');
+            const newCommandeRef = commandesRef.push();
+            const newCommande = {
+                idCommande: body.idCommande,
+                isoDateCommande: body.isoDateCommande,
+                tableNumber: body.tableNumber,
+                products: body.products,
+                orderType: body.orderType,
+                etat: body.etat,
+                paymentStatus: body.paymentStatus,
+                totalPrice: body.totalPrice,
+                createdAt: new Date().toISOString()
+            };
+            await newCommandeRef.set(newCommande);
+            CommonService.sendSuccessResponse(res, { id: newCommandeRef.key });
         } catch (error) {
             CommonService.handleError(res, error, 'Error creating project');
         }
     };
 
 
+
     async extendCommande(req, res) {
         const { params, body } = req;
 
-        CommonService.checkRequiredProperties(params, ['idCommande']);
-        CommonService.checkRequiredProperties(body, [
-            'extendProducts'
-        ]);
+        CommonService.checkRequiredProperties(params, ['id']);
+        CommonService.checkRequiredProperties(body, ['extendProducts']);
     
         try {
-            const existingCommande = await Commande.findOne({ idCommande: params.idCommande });
-            if (!existingCommande) {
-                CommonService.handleNotFoundError(res, `Commande ${params.idCommande} not found`);
+            const db = admin.database();
+            const commandesRef = db.ref('commandes');
+            
+            // Step 1: Retrieve the existing commande by id
+            const snapshot = await commandesRef.orderByChild('idCommande').equalTo(params.id).once('value');
+            const commandeData = snapshot.val();
+
+            if (!commandeData) {
+                return CommonService.handleNotFoundError(res, `Commande ${params.idCommande} not found`);
             }
-            existingCommande.products = body.extendProducts.map(product => ({
-                _id: new mongoose.Types.ObjectId(),
+
+            // Step 2: Extract the existing commande
+            const firebaseKey = Object.keys(commandeData)[0];
+            const existingCommande = commandeData[firebaseKey];
+
+            // Step 3: Add new products to the existing ones
+            const extendedProducts = body.extendProducts.map(product => ({
                 ...product
-            }));;
-    
-            // Step 3: Optionally, recalculate the total price based on new products added
+            }));
+
+            existingCommande.products = [...existingCommande.products, ...extendedProducts];
+
+            // Step 4: Recalculate the total price
             const newTotalPrice = existingCommande.products.reduce((total, product) => {
                 return total + (product.price * product.quantity);
             }, 0);
 
-            // Update the total price in the commande
-            existingCommande.totalPrice = newTotalPrice;    
-            const updatedCommande = await existingCommande.save();
-    
-            // Step 5: Send success response with updated commande details
-            CommonService.sendSuccessResponse(res, { id: updatedCommande.idCommande});
+            existingCommande.totalPrice = newTotalPrice;
+
+            // Step 5: Update the commande in Firebase
+            await commandesRef.child(firebaseKey).update({
+                products: existingCommande.products,
+                totalPrice: newTotalPrice
+            });
+
+            // Send the updated response
+            CommonService.sendSuccessResponse(res, { id: params.idCommande });
+
         } catch (error) {
             CommonService.handleError(res, error, 'Error extending commande');
         }
@@ -93,36 +127,43 @@ module.exports.CommandesService = class CommandesService {
 
     async payCommande(req, res) {
         const { params, body } = req;
+
+        // Check required properties
         CommonService.checkRequiredProperties(params, ['id']);
-        CommonService.checkRequiredProperties(body, [
-            'products',
-            'paymentMethod',
-            'totalPrice'
-        ]);
+        CommonService.checkRequiredProperties(body, ['products', 'paymentMethod', 'totalPrice']);
 
-        const { products, paymentMethod, totalPrice } = req.body;
-        
+        const { products, paymentMethod, totalPrice } = body;
+
         try {
-            // Step 1: Check if the commande exists
-            const existingCommande = await Commande.findOne({ idCommande: params.id }).exec();
-            if (!existingCommande || existingCommande == null) {
-                return CommonService.handleNotFoundError(res, `Commande ${params.idCommande} not found`);
-            }
-            
-            // Step 2: Check if the commande has already been paid
-            const alreadyPaidProduct = products.find((product) =>
-                existingCommande.paidProducts.some((paidProduct) => paidProduct.id === product.id)
-            );
-            if (existingCommande?.paidProducts && alreadyPaidProduct) {
-                return CommonService.handleError(res,  `The product with id ${alreadyPaidProduct.id} has already been paid.`,);
+            const db = admin.database();
+            const commandesRef = db.ref('commandes');
+
+            // Step 1: Retrieve the existing commande by id
+            const snapshot = await commandesRef.orderByChild('idCommande').equalTo(params.id).once('value');
+            const commandeData = snapshot.val();
+
+            if (!commandeData) {
+                return CommonService.handleNotFoundError(res, `Commande ${params.id} not found`);
             }
 
-            // Step 3: Check if the payment method is valid
-            if (paymentMethod !== 'CASH' && paymentMethod !== 'CB') {
-                return CommonService.handleError(res, `The payment method ${paymentMethod} is not valid.`,);
+            // Extract the existing commande and Firebase key
+            const firebaseKey = Object.keys(commandeData)[0];
+            const existingCommande = commandeData[firebaseKey];
+
+            // Step 2: Check if the products are already paid
+            const alreadyPaidProduct = products.find((product) =>
+                existingCommande.paidProducts?.some((paidProduct) => paidProduct.id === product.id)
+            );
+            if (alreadyPaidProduct) {
+                return CommonService.handleError(res, `The product with id ${alreadyPaidProduct.id} has already been paid.`);
             }
-                
-            // Filtrer les produits payés
+
+            // Step 3: Validate payment method
+            if (paymentMethod !== 'CASH' && paymentMethod !== 'CB') {
+                return CommonService.handleError(res, `The payment method ${paymentMethod} is not valid.`);
+            }
+
+            // Step 4: Add new paid products
             const newPaidProducts = products.map(product => ({
                 id: product.id,
                 price: product.price,
@@ -130,35 +171,34 @@ module.exports.CommandesService = class CommandesService {
                 paymentMethod: paymentMethod
             }));
 
-            existingCommande.paidProducts = [...existingCommande.paidProducts, ...newPaidProducts];
+            existingCommande.paidProducts = [...(existingCommande.paidProducts || []), ...newPaidProducts];
             existingCommande.totalPricePaid = (existingCommande.totalPricePaid || 0) + totalPrice;
 
-            // Step 5: Update payment status if the total price is fully paid
+            // Step 5: Update payment status
             if (existingCommande.paidProducts.length === existingCommande.products.length) {
                 existingCommande.paymentStatus = 'PAID';
             } else {
                 existingCommande.paymentStatus = 'PARTIALLY_PAID';
             }
 
-            // Mettre à jour la commande avec les informations de paiement
-            if((existingCommande.totalPrice === existingCommande.totalPricePaid) || existingCommande.paymentStatus === 'PAID'){
-                return CommonService.handleError(res, `The commande with id ${params.id} has already been paid.`,);
-            }
+            // Step 6: Save updated commande to Firebase
+            await commandesRef.child(firebaseKey).update({
+                paidProducts: existingCommande.paidProducts,
+                totalPricePaid: existingCommande.totalPricePaid,
+                paymentStatus: existingCommande.paymentStatus
+            });
 
-            // Mettre à jour la commande dans la base de données en utilisant PayCommande
-            const updatedCommande = await existingCommande.save();
-    
-            // Envoyer une réponse de succès
-            return CommonService.sendSuccessResponse(res, {
-                id: updatedCommande.idCommande,
-                restToPay: (existingCommande.totalPrice - updatedCommande.totalPricePaid),
-                paidProducts: updatedCommande.paidProducts
+            // Send success response with payment details
+            CommonService.sendSuccessResponse(res, {
+                id: existingCommande.idCommande,
+                restToPay: (existingCommande.totalPrice - existingCommande.totalPricePaid),
+                paidProducts: existingCommande.paidProducts
             }, 'Paiement effectué avec succès');
-            
-        }  catch (error) {
+
+        } catch (error) {
             console.error('Payment error:', error);
-            return CommonService.handleError(res, error, 'Erreur lors du paiement');
-            }
-    };
+            CommonService.handleError(res, error, 'Erreur lors du paiement');
+        }
+    }
 
 };

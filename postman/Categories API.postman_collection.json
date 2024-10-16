@@ -7,7 +7,7 @@
 	},
 	"item": [
 		{
-			"name": "http://localhost:5000/v1/categories",
+			"name": "categories",
 			"request": {
 				"method": "GET",
 				"header": [],

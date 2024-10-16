@@ -28,31 +28,37 @@ module.exports = (router) => {
         res.send(_.pick(require('./package.json'), ['name', 'version']))
     });
 
-    router.post('/catalogues/convert-xls-to-json', upload.single('filePath'), (req, res, next) => {
+    //================
+    // CATALOGUES ROUTER
+    //================
+    router.post('/catalogue/convert-xls-to-json', upload.single('filePath'), (req, res, next) => {
       const filePath = path.join('/tmp', req.file.filename); // Use the file saved in /tmp      
         CommonService.executeAndSendResult(async () => {
           return await new CatalogueService().convertXlsToJson(filePath, res);
         }, res, next);
     })
 
-    router.get('/catalogues/download-example-xls', (req, res, next) => {
+    router.get('/catalogue/download-example-xls', (req, res, next) => {
       CommonService.executeAndSendResult(async () => {
         return await new CatalogueService().downloadExampleXls(res);
       }, res, next);
     });
 
-    router.get('/catalogue/grouped-category', (req, res, next) => {
+    router.get('/catalogues/grouped-category', (req, res, next) => {
       CommonService.executeAndSendResult(async () => {
-        return await new CatalogueService().getCatalogueGroupedByCategory(res);
+        return await new CatalogueService().getCataloguesGroupedByCategory(res);
       }, res, next);
     });
 
-    router.get('/catalogue', (req, res, next) => {
+    router.get('/catalogues', (req, res, next) => {
       CommonService.executeAndSendResult(async () => {
-        return await new CatalogueService().getCatalogueWithIcons(res);
+        return await new CatalogueService().getCataloguesWithIcons(res);
       }, res, next);
     });
 
+    //================
+    // CATEGORIES ROUTER
+    //================
     router.get('/categories', (req, res, next) => {
       CommonService.executeAndSendResult(async () => {
         return await new CategoriessService().getCategories(res);
@@ -63,37 +69,41 @@ module.exports = (router) => {
     //================
     // COMMANDE ROUTER
     //================
-    router.get('/commandes', (req, res, next) => {
-      CommonService.executeAndSendResult(async () => {
-        return await new CommandesService().getCommandes(req, res);
-      }, res, next);
-    });
-
-    router.get('/commande/:id', (req, res, next) => {
-      CommonService.executeAndSendResult(async () => {
-        return await new CommandesService().getCommandeById(req, res);
-      }, res, next);
-    });
-
     router.post('/commande', (req, res, next) => {
       CommonService.executeAndSendResult(async () => {
         return await new CommandesService().createCommande(req.body, res);
       }, res, next);
     });
 
-    router.post('/commande/:id/pay', (req, res, next) => {
+    router.get('/commandes', (req, res, next) => {
+      CommonService.executeAndSendResult(async () => {
+        return await new CommandesService().getCommandes(req, res);
+      }, res, next);
+    });
+
+    router.get('/commandes/:id', (req, res, next) => {
+      CommonService.executeAndSendResult(async () => {
+        return await new CommandesService().getCommandeById(req, res);
+      }, res, next);
+    });
+
+    router.post('/commandes/:id/pay', (req, res, next) => {
       CommonService.executeAndSendResult(async () => {
         return await new CommandesService().payCommande(req, res);
       }, res, next);
     });
 
-    router.post('/commande/:id/extend', (req, res, next) => {
+    router.put('/commandes/:id/extend', (req, res, next) => {
       CommonService.executeAndSendResult(async () => {
       return await new CommandesService().extendCommande(req, res);
       }, res, next);
     });
 
-    router.post('/commande/print-ticket', async (req, res, next) => {
+
+    //================
+    // PRINT ROUTER TODO WIP
+    //================
+    router.post('/commandes/print-ticket', async (req, res, next) => {
       CommonService.executeAndSendResult(async () => {
         return await new PrinterService().printCommande(req.body, res);
       }, res, next);
