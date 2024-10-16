@@ -168,7 +168,9 @@ module.exports.CommandesService = class CommandesService {
                 id: product.id,
                 price: product.price,
                 quantity: product.quantity,
-                paymentMethod: paymentMethod
+                paymentMethod: paymentMethod,
+                ...body.amountReturned && {amountReturned: body.amountReturned}, 
+                ...body.amountGiven && {amountGiven: body.amountGiven}
             }));
 
             existingCommande.paidProducts = [...(existingCommande.paidProducts || []), ...newPaidProducts];
