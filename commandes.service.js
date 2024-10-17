@@ -73,11 +73,9 @@ module.exports.CommandesService = class CommandesService {
         }
     };
 
-
-
     async extendCommande(req, res) {
         const { params, body } = req;
-
+    
         CommonService.checkRequiredProperties(params, ['id']);
         CommonService.checkRequiredProperties(body, ['extendProducts']);
     
@@ -88,42 +86,53 @@ module.exports.CommandesService = class CommandesService {
             // Step 1: Retrieve the existing commande by id
             const snapshot = await commandesRef.orderByChild('idCommande').equalTo(params.id).once('value');
             const commandeData = snapshot.val();
-
+    
             if (!commandeData) {
                 return CommonService.handleNotFoundError(res, `Commande ${params.idCommande} not found`);
             }
-
+    
             // Step 2: Extract the existing commande
             const firebaseKey = Object.keys(commandeData)[0];
             const existingCommande = commandeData[firebaseKey];
-
-            // Step 3: Add new products to the existing ones
-            const extendedProducts = body.extendProducts.map(product => ({
-                ...product
-            }));
-
-            existingCommande.products = [...existingCommande.products, ...extendedProducts];
-
+    
+            // Step 3: Merge products - Update quantities for existing products, add new ones
+            const updatedProducts = [...existingCommande.products];
+    
+            body.extendProducts.forEach(extendProduct => {
+                const existingProductIndex = updatedProducts.findIndex(p => p.id === extendProduct.id);
+    
+                if (existingProductIndex !== -1) {
+                    // If the product exists, update the quantity
+                    updatedProducts[existingProductIndex].quantity = extendProduct.quantity;
+                } else {
+                    // If the product doesn't exist, add it as a new product
+                    updatedProducts.push(extendProduct);
+                }
+            });
+    
+            existingCommande.products = updatedProducts;
+    
             // Step 4: Recalculate the total price
             const newTotalPrice = existingCommande.products.reduce((total, product) => {
                 return total + (product.price * product.quantity);
             }, 0);
-
+    
             existingCommande.totalPrice = newTotalPrice;
-
+    
             // Step 5: Update the commande in Firebase
             await commandesRef.child(firebaseKey).update({
                 products: existingCommande.products,
                 totalPrice: newTotalPrice
             });
-
+    
             // Send the updated response
             CommonService.sendSuccessResponse(res, { id: params.idCommande });
-
+    
         } catch (error) {
             CommonService.handleError(res, error, 'Error extending commande');
         }
     };
+        
 
     async payCommande(req, res) {
         const { params, body } = req;
