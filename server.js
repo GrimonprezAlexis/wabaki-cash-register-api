@@ -18,6 +18,7 @@ admin.initializeApp({
 
 const db = admin.database();
 
+
 app.use(require('./logger'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
