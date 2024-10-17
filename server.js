@@ -12,8 +12,12 @@ const port = process.env.PORT || 3000;
 const serviceAccount = require('./firebase-adminsdk.json');
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://wabaki-cash-register-ionic-default-rtdb.firebaseio.com/'
+    credential: admin.credential.cert({
+        project_id: process.env.FIREBASE_PROJECT_ID,
+        private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Replace escaped newlines with actual newlines
+        client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      }),
+    databaseURL: 'https://wabaki-cash-register-ionic-default-rtdb.firebaseio.com/'
 });
 
 const db = admin.database();
