@@ -108,6 +108,7 @@ module.exports.CatalogueService = class CatalogueService {
             // Step 2: Group catalogues by category
             const groupedCatalogue = Object.keys(catalogues).reduce((acc, key) => {
                 const product = catalogues[key];
+                const categoryName = product.category;
 
                 if (!acc[categoryName]) acc[categoryName] = [];
                 acc[categoryName].push({
